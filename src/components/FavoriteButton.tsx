@@ -1,17 +1,16 @@
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { useFavorites } from "../context/FavoritesContext";
 
 type Props = {
   idMeal: string;
-  favoriteIds: string[];
-  onToggle: (idMeal: string) => void;
 };
 
-export default function FavoriteButton({ idMeal, favoriteIds, onToggle }: Props) {
-  const isFav = favoriteIds.includes(idMeal);
+export default function FavoriteButton({ idMeal }: Props) {
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   return (
-    <TouchableOpacity style={styles.button} onPress={() => onToggle(idMeal)}>
-      <Text style={styles.heart}>{isFav ? "♥" : "♡"}</Text>
+    <TouchableOpacity style={styles.button} onPress={() => toggleFavorite(idMeal)}>
+      <Text style={styles.heart}>{isFavorite(idMeal) ? "♥" : "♡"}</Text>
     </TouchableOpacity>
   );
 }

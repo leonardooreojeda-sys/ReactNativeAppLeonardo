@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { fetchMealById } from "../services/mealsApi";
-import { loadFavoriteIds, saveFavoriteIds } from "../services/storage";
 import { MealDetailState } from "../types/meal";
 import { RootStackParamList } from "../../App";
 import FavoriteButton from "../components/FavoriteButton";
@@ -25,7 +24,6 @@ export default function MealDetailScreen({ route, navigation }: Props) {
     meal: null,
     message: "",
   });
-  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
 
   async function loadMeal() {
     setState({ status: "loading", meal: null, message: "" });
@@ -41,17 +39,8 @@ export default function MealDetailScreen({ route, navigation }: Props) {
     }
   }
 
-  async function toggleFavorite(id: string) {
-    const updated = favoriteIds.includes(id)
-      ? favoriteIds.filter((f) => f !== id)
-      : [...favoriteIds, id];
-    setFavoriteIds(updated);
-    await saveFavoriteIds(updated);
-  }
-
   useEffect(() => {
     loadMeal();
-    loadFavoriteIds().then(setFavoriteIds);
   }, [idMeal]);
 
   if (state.status === "loading") {
@@ -91,11 +80,7 @@ export default function MealDetailScreen({ route, navigation }: Props) {
       <Image source={{ uri: meal.strMealThumb }} style={styles.image} />
       <View style={styles.titleRow}>
         <Text style={styles.title}>{meal.strMeal}</Text>
-        <FavoriteButton
-          idMeal={meal.idMeal}
-          favoriteIds={favoriteIds}
-          onToggle={toggleFavorite}
-        />
+        <FavoriteButton idMeal={meal.idMeal} />
       </View>
 
       <Text style={styles.sectionLabel}>INGREDIENTI</Text>

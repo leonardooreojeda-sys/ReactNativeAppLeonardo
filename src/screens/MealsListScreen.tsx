@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { fetchItalianMeals } from "../services/mealsApi";
-import { loadFavoriteIds, saveFavoriteIds } from "../services/storage";
+import { useFavorites } from "../context/FavoritesContext";
 import { MealsListState } from "../types/meal";
 import { RootStackParamList } from "../../App";
 import FavoriteButton from "../components/FavoriteButton";
@@ -18,12 +18,12 @@ import FavoriteButton from "../components/FavoriteButton";
 type Props = NativeStackScreenProps<RootStackParamList, "MealsList">;
 
 export default function MealsListScreen({ navigation }: Props) {
+  const { favoriteIds } = useFavorites();
   const [state, setState] = useState<MealsListState>({
     status: "loading",
     items: [],
     message: "",
   });
-  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
 
   async function loadMeals() {
     setState({ status: "loading", items: [], message: "" });
@@ -39,17 +39,8 @@ export default function MealsListScreen({ navigation }: Props) {
     }
   }
 
-  async function toggleFavorite(idMeal: string) {
-    const updated = favoriteIds.includes(idMeal)
-      ? favoriteIds.filter((id) => id !== idMeal)
-      : [...favoriteIds, idMeal];
-    setFavoriteIds(updated);
-    await saveFavoriteIds(updated);
-  }
-
   useEffect(() => {
     loadMeals();
-    loadFavoriteIds().then(setFavoriteIds);
   }, []);
 
   if (state.status === "loading") {
@@ -91,19 +82,17 @@ export default function MealsListScreen({ navigation }: Props) {
         keyExtractor={(item) => item.idMeal}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.card}
-            activeOpacity={0.75}
-            onPress={() => navigation.navigate("MealDetail", { idMeal: item.idMeal })}
-          >
-            <Image source={{ uri: item.strMealThumb }} style={styles.thumb} />
-            <Text style={styles.mealName}>{item.strMeal}</Text>
-            <FavoriteButton
-              idMeal={item.idMeal}
-              favoriteIds={favoriteIds}
-              onToggle={toggleFavorite}
-            />
-          </TouchableOpacity>
+          <View style={styles.card}>
+            <TouchableOpacity
+              style={styles.cardLeft}
+              activeOpacity={0.75}
+              onPress={() => navigation.navigate("MealDetail", { idMeal: item.idMeal })}
+            >
+              <Image source={{ uri: item.strMealThumb }} style={styles.thumb} />
+              <Text style={styles.mealName}>{item.strMeal}</Text>
+            </TouchableOpacity>
+            <FavoriteButton idMeal={item.idMeal} />
+          </View>
         )}
       />
     </View>
@@ -115,15 +104,20 @@ const styles = StyleSheet.create({
   centered: { flex: 1, backgroundColor: "#0f172a", justifyContent: "center", alignItems: "center", padding: 24 },
   favCount: { color: "#64748b", fontSize: 12, textAlign: "center", paddingTop: 12 },
   list: { padding: 16, gap: 12 },
-card: {
-    backgroundColor: "#47d107",
+  card: {
+    backgroundColor: "#1e293b",
     borderRadius: 12,
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#1aff67",
-},
-  thumb: { width: 80, height: 80 },
+    borderColor: "#334155",
+  },
+  cardLeft: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  thumb: { width: 80, height: 80, borderRadius: 12 },
   mealName: { color: "#f8fafc", fontSize: 15, fontWeight: "600", flex: 1, paddingHorizontal: 14 },
   loadingText: { color: "#94a3b8", marginTop: 12, fontSize: 14 },
   emptyText: { color: "#94a3b8", fontSize: 15 },
